@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  ms1:
+    build:
+      context: ./microservicio1 
+    container_name: ms1
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/db_microservicio1
+      - SPRING_DATASOURCE_USERNAME=username
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_VARIABLE_ACCOUNT_VALUE=http://ms2:8081/api/cuentas
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+
+  ms2:
+    build:
+      context: ./microservicio2 
+    container_name: ms2
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db2:5432/db_microservicio2
+      - SPRING_DATASOURCE_USERNAME=username
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_VARIABLE_CLIENT_VALUE=http://ms1:8080/api/clientes
+    depends_on:
+      - db2
+      - ms1
+    ports:
+      - "8081:8081"
+
+  db:
+    image: postgres:16.4
+    container_name: db_microservicio1
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db_microservicio1
+    volumes:
+      - ./microservicio1.sql:/docker-entrypoint-initdb.d/microservicio1.sql
+    ports:
+      - "5432:5432"
+  
+  db2:
+    image: postgres:16.4
+    container_name: db_microservicio2
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: db_microservicio2
+    volumes:
+      - ./microservicio2.sql:/docker-entrypoint-initdb.d/microservicio2.sql
+    ports:
+      - "5433:5432"
